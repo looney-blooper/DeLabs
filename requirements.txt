@@ -1,0 +1,15 @@
+langchain
+langgraph
+langchain-google-genai
+langchain-groq
+pydantic
+pydantic-settings
+
+
+psycopg2-binary
+sqlalchemy
+celery[redis]
+
+python-dotenv
+httpx
+jinja2

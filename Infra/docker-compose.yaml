@@ -1,0 +1,59 @@
+version: '3.8'
+
+services:
+  # 1. State Persistence (LangGraph Checkpoints)
+  postgres:
+    image: postgres:16-alpine
+    container_name: delabs_postgres
+    environment:
+      POSTGRES_USER: analab_user
+      POSTGRES_PASSWORD: analab_password
+      POSTGRES_DB: analab_state
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U analab_user -d analab_state"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  # 2. Asynchronous Task Queue (The Worker Muscle)
+  rabbitmq:
+    image: rabbitmq:3-management-alpine
+    container_name: delabs_rabbitmq
+    ports:
+      - "5672:5672"   # AMQP Port
+      - "15672:15672" # Management UI (Login: guest/guest)
+    volumes:
+      - rabbitmq_data:/var/lib/rabbitmq
+
+  # 3. Object Storage (Datasets & Model Checkpoints)
+  minio:
+    image: minio/minio
+    container_name: delabs_minio
+    command: server /data --console-address ":9001"
+    environment:
+      MINIO_ROOT_USER: admin
+      MINIO_ROOT_PASSWORD: password123
+    ports:
+      - "9000:9000"   # API
+      - "9001:9001"   # UI Console
+    volumes:
+      - minio_data:/data
+
+  # 4. Vector Database (Research Intelligence)
+  chromadb:
+    image: chromadb/chroma:latest
+    container_name: delabs_chroma
+    ports:
+      - "8000:8000"
+    volumes:
+      - chroma_data:/chroma/chroma
+
+volumes:
+  postgres_data:
+  rabbitmq_data:
+  minio_data:
+  chroma_data:

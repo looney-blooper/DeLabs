@@ -2,8 +2,9 @@
 /.venv
 .venv/
 
+.env
 
 
-ProjectPlan.odt
-/ProjectPlan.odt
-ProjectPlan.odt/
+/ProjectPlans
+ProjectPlans/
+
