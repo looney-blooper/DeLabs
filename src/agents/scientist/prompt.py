@@ -17,7 +17,7 @@ If the user's request is vague, define a concrete, high-performance proxy task.
 """
 
 
-scientist_system_prompt_template = ChatPromptTemplate.from_messages([
+scientist_prompt_template = ChatPromptTemplate.from_messages([
     ("system", SCIENTIST_SYSTEM_PROMPT),
     MessagesPlaceholder(variable_name="messages"),
 ])

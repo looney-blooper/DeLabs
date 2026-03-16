@@ -20,6 +20,6 @@ def scientist_node(state : DeLabsState) -> dict:
 
     return {
         "messages" : [response],
-        "research notes" : state.get("research_notes", []) + [response.content] if response.content else state.get("research_notes", [])
+        "research content" : state.get("research_content", []) + [response.content] if response.content else state.get("research_content", [])
     }
 
