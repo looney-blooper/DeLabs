@@ -3,7 +3,7 @@ from src.agents.engineer.tools import engineer_tools
 from src.core.state import DeLabsState
 from src.core.llm_gateway import get_llm
 
-def engineer_agent(state : DeLabsState) -> dict:
+def engineer_node(state : DeLabsState) -> dict:
     """
     LangGraph node for Engineer Agent
     """
@@ -17,7 +17,7 @@ def engineer_agent(state : DeLabsState) -> dict:
 
     response = engineer_chain.invoke({
         "messages" : state["messages"],
-        "architect_draft" : architect_blueprint,
+        "architecture_draft" : architect_blueprint,
     })
 
     new_filepaths = state.get("code_filepaths", {})

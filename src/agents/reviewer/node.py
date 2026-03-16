@@ -3,7 +3,7 @@ from src.agents.reviewer.tools import reviewer_tools
 from src.core.state import DeLabsState
 from src.core.llm_gateway import get_llm
 
-def reviewer_agent(state : DeLabsState) -> dict:
+def reviewer_node(state : DeLabsState) -> dict:
     """
     LangGrapg node for Reviewer Agent
     """

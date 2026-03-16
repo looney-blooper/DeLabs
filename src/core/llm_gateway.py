@@ -13,7 +13,7 @@ def get_llm(persona : str = "default", temperature : float = 0.2):
 
     if persona in ["archeitect", "scientist"]:
         return ChatGoogleGenerativeAI(
-            model = "gemini-1.5-pro",
+            model = "gemini-2.5-flash",
             temperature = temperature,
             google_api_key = gemini_api_key,
             max_retries = 3,

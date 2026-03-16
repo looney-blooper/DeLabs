@@ -13,3 +13,7 @@ celery[redis]
 python-dotenv
 httpx
 jinja2
+
+
+pytest
+pytest-asyncio
