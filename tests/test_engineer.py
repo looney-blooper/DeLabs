@@ -33,5 +33,4 @@ def test_engineer_node_execution():
     ai_response = result_state["messages"][-1]
     
     print(f"\n💻 [Engineer Response Preview]:\n{ai_response.content[:300]}")
-    if ai_response.tool_calls:
-        print(f"\n🔧 [Engineer Tool Calls]: {ai_response.tool_calls}")
+    
