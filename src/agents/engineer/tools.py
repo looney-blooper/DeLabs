@@ -1,17 +1,30 @@
 from langchain_core.tools import tool
 
+import os
+from pathlib import Path
+
 @tool
 def write_code_to_workspace(filename: str, code_content: str) -> str:
     """
-    Simulates writing generated Python code to the isolated local workspace.
-    Use this to save files like 'model.py' or 'train.py'.
+    Saves the Python code to isolated local workspace
     """
     # TODO: Connect this to the Workspace MCP Server to actually write to disk securely.
-    # For now, we simulate a successful file write.
     
-    simulated_path = f"./workspace/experiments/{filename}"
-    print(f"💾 [Simulated I/O] ML Engineer saved: {simulated_path}")
+    try:
+        base_dir = Path("./workspace/experiments").resolve()
+        base_dir.mkdir(parents=True, exist_ok=True)
+
+        safe_filename = os.path.basename(filename)
+        file_path = base_dir / safe_filename
+
+        with open(file_path, "w", encoding="utf-8") as f:
+            f.write(code_content)
+
+        return f"SUCCESS: File '{safe_filename}' securely written to {file_path}"
+
+    except Exception as e:
+        return f"ERROR: failed to write file. {str(e)}"
     
-    return f"SUCCESS: File {filename} written securely to workspace."
+    
 
 engineer_tools = [write_code_to_workspace]

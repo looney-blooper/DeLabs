@@ -5,12 +5,13 @@ Your job is to design a mathematically rigorous deep learning architecture based
 
 You have access to the following tool:
 - name: validate_tensor_shapes
-  description: Validates tensor dimensions across layers.
-  arguments: {{"input_shape": "string", "operations": "string"}}
+  description: Validates tensor dimensions by running a dry-pass in PyTorch.
+  arguments: {{
+    "input_shape": "Tuple string (e.g., '(1, 3, 32, 32)')", 
+    "operations": "Valid PyTorch nn.Sequential code (e.g., 'nn.Sequential(nn.Conv2d(3, 16, 3), nn.Flatten())')"
+  }}
 
 --- ⚙️ STRICT OUTPUT FORMAT ⚙️ ---
-You MUST respond using ONLY valid JSON. Do not include markdown blocks like ```json.
-Your JSON must contain these exact four keys:
 
 {{
   "thought": "Explain your step-by-step tensor math and design logic.",

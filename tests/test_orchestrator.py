@@ -9,7 +9,7 @@ def test_full_swarm_execution():
     
     # The absolute bare-minimum starting state
     initial_state = {
-        "messages": [HumanMessage(content="Design a simple 2-layer Convolutional Neural Network for CIFAR-10. Keep the code very brief.")],
+        "messages": [HumanMessage(content="I want to build a PyTorch model for Vision Transformer (ViT) based image classification. Find a recent paper on ViT optimizations and write the model code.")],
         "research_content": [],
         "paper_references": [],
         "architecture_draft": "",
