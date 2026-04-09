@@ -3,9 +3,9 @@ from langchain_core.messages import AIMessage, HumanMessage
 from src.core.state import DeLabsState
 from src.core.llm_gateway import get_llm
 from src.agents.scientist.prompt import scientist_prompt_template
-from src.agents.scientist.tools import scientist_tools
+from src.core.mcp_gateway import mcp_gateway
 
-def scientist_node(state: DeLabsState) -> dict:
+async def scientist_node(state: DeLabsState) -> dict:
     print("🧠 [Swarm] Chief Scientist is researching (ReAct Mode)...")
     
     # 1. Get the Groq Llama 3 70B model
@@ -16,9 +16,11 @@ def scientist_node(state: DeLabsState) -> dict:
     current_messages = state["messages"].copy()
     research_content = state.get("research_content", [])
 
+    scientist_tools = mcp_gateway.get_tools("literature")
+
     # 3. The ReAct Execution Loop (Capped at 5 iterations to prevent infinite loops)
     for iteration in range(5):
-        response = chain.invoke({"messages": current_messages})
+        response = await chain.ainvoke({"messages": current_messages})
         
         try:
             # Clean the text: Models sometimes ignore the "No Markdown" rule
@@ -52,7 +54,7 @@ def scientist_node(state: DeLabsState) -> dict:
             tool_result = "Error: Tool not found."
             for tool in scientist_tools:
                 if tool.name == tool_name:
-                    tool_result = tool.invoke(args)
+                    tool_result = await tool.ainvoke(args)
                     break
             
             print(f"   📥 Result: {tool_result}")

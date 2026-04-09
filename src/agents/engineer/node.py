@@ -3,9 +3,9 @@ from langchain_core.messages import AIMessage, HumanMessage
 from src.core.state import DeLabsState
 from src.core.llm_gateway import get_llm
 from src.agents.engineer.prompt import engineer_prompt_template
-from src.agents.engineer.tools import engineer_tools
+from src.core.mcp_gateway import mcp_gateway
 
-def engineer_node(state: DeLabsState) -> dict:
+async def engineer_node(state: DeLabsState) -> dict:
     print("💻 [Swarm] ML Engineer is writing code (ReAct Mode)...")
     
     # 1. Get the hyper-fast Llama 3 8B model
@@ -19,9 +19,12 @@ def engineer_node(state: DeLabsState) -> dict:
     # We copy the existing dictionary so we don't accidentally overwrite past files
     code_filepaths = state.get("code_filepaths", {}).copy()
 
+
+    engineer_tools = mcp_gateway.get_tools("workspace")
+
     # 3. The ReAct Execution Loop
     for iteration in range(5):
-        response = chain.invoke({
+        response = await chain.ainvoke({
             "messages": current_messages,
             "architecture_draft": blueprint
         })
@@ -59,7 +62,7 @@ def engineer_node(state: DeLabsState) -> dict:
             tool_result = "Error: Tool not found."
             for tool in engineer_tools:
                 if tool.name == tool_name:
-                    tool_result = tool.invoke(args)
+                    tool_result = await tool.ainvoke(args)
                     # If successful, track the newly created file in the LangGraph State!
                     code_filepaths[filename] = f"./workspace/experiments/{filename}"
                     break

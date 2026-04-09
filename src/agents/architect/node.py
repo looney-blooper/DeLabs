@@ -3,9 +3,9 @@ from langchain_core.messages import AIMessage, HumanMessage
 from src.core.state import DeLabsState
 from src.core.llm_gateway import get_llm
 from src.agents.architect.prompt import architect_prompt_template
-from src.agents.architect.tools import architect_tools
+from src.core.mcp_gateway import mcp_gateway
 
-def architect_node(state: DeLabsState) -> dict:
+async def architect_node(state: DeLabsState) -> dict:
     print("📐 [Swarm] Architect is designing (ReAct Mode)...")
     
     # 1. Get the Groq Llama 3 70B model
@@ -18,9 +18,11 @@ def architect_node(state: DeLabsState) -> dict:
     architecture_draft = ""
     hyperparameters = {"learning_rate": 1e-3, "optimizer": "AdamW"}
 
+    architect_tools = mcp_gateway.get_tools("sysadmin")
+
     # 3. The ReAct Execution Loop
     for iteration in range(5):
-        response = chain.invoke({
+        response = await chain.ainvoke({
             "messages": current_messages,
             "research_notes": research_content
         })
@@ -59,7 +61,7 @@ def architect_node(state: DeLabsState) -> dict:
             tool_result = "Error: Tool not found."
             for tool in architect_tools:
                 if tool.name == tool_name:
-                    tool_result = tool.invoke(args)
+                    tool_result = await tool.ainvoke(args)
                     break
             
             print(f"   📥 Result: {tool_result}")

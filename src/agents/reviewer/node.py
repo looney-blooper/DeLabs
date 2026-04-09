@@ -3,9 +3,9 @@ from langchain_core.messages import AIMessage, HumanMessage
 from src.core.state import DeLabsState
 from src.core.llm_gateway import get_llm
 from src.agents.reviewer.prompt import reviewer_prompt_template
-from src.agents.reviewer.tools import reviewer_tools
+from src.core.mcp_gateway import mcp_gateway
 
-def reviewer_node(state: DeLabsState) -> dict:
+async def reviewer_node(state: DeLabsState) -> dict:
     print("🔬 [Swarm] QA Reviewer is analyzing code (ReAct Mode)...")
     
     # 1. Get the hyper-fast Llama 3 8B model
@@ -22,9 +22,11 @@ def reviewer_node(state: DeLabsState) -> dict:
     error_logs = state.get("error_logs", [])
     passed_qa = False
 
+    reviewer_tools = mcp_gateway.get_tools("workspace") + mcp_gateway.get_tools("sysadmin")
+
     # 3. The ReAct Execution Loop
     for iteration in range(5):
-        response = chain.invoke({
+        response = await chain.ainvoke({
             "messages": current_messages,
             "code_filepaths": filepaths_str
         })
@@ -68,7 +70,7 @@ def reviewer_node(state: DeLabsState) -> dict:
             tool_result = "Error: Tool not found."
             for tool in reviewer_tools:
                 if tool.name == tool_name:
-                    tool_result = tool.invoke(args)
+                    tool_result = await tool.ainvoke(args)
                     break
             
             print(f"   📥 Result: {tool_result}")
