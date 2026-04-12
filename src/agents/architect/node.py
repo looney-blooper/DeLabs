@@ -43,13 +43,24 @@ async def architect_node(state: DeLabsState) -> dict:
         if output.get("final_answer"):
             print("   ✅ Architecture design complete.")
             
-            # If the LLM returns a nested dictionary, convert it to a formatted string
             final_ans = output["final_answer"]
-            if not isinstance(final_ans, str):
-                final_ans = json.dumps(final_ans, indent=2)
+            
+            # If it's a dictionary, split the data nicely
+            if isinstance(final_ans, dict):
+                # Save the structure as a string for the state
+                architecture_draft = json.dumps(final_ans.get("architecture", final_ans), indent=2)
                 
-            architecture_draft = final_ans
-            current_messages.append(AIMessage(content=final_ans))
+                # If the LLM provided specific hyperparameters, update our defaults!
+                if "hyperparameters" in final_ans:
+                    hyperparameters.update(final_ans["hyperparameters"])
+            else:
+                # Fallback if the LLM just wrote a plain text paragraph
+                architecture_draft = str(final_ans)
+                
+            # --- THE MAGIC FIX FOR THE FRONTEND ---
+            # Instead of appending the raw JSON to the chat, we append a clean summary.
+            # The actual JSON data is still safely stored in architecture_draft for the Engineer to use!
+            current_messages.append(AIMessage(content="I have finalized the architecture design and defined the necessary hyperparameters. I am handing the blueprint off to the Engineer."))
             break
 
         # 5. Tool Execution Check

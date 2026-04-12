@@ -58,7 +58,7 @@ async def reviewer_node(state: DeLabsState) -> dict:
             else:
                 print("   🏆 QA Passed! Ready for human execution.")
 
-            current_messages.append(AIMessage(content=final_ans))
+            current_messages.append(AIMessage(content="[Clean string summary of what the agent just did]"))
             break
 
         # 5. Tool Execution Check

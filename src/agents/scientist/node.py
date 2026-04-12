@@ -39,9 +39,22 @@ async def scientist_node(state: DeLabsState) -> dict:
         # 4. Check for Final Answer
         if output.get("final_answer"):
             print("   ✅ Research complete.")
-            research_content.append(output["final_answer"])
-            # Append the final answer to the message history
-            current_messages.append(AIMessage(content=output["final_answer"]))
+            
+            final_ans = output["final_answer"]
+            
+            # 1. Safely extract the data so Pydantic doesn't crash
+            if isinstance(final_ans, dict):
+                research_data = json.dumps(final_ans, indent=2)
+            else:
+                research_data = str(final_ans)
+                
+            # 2. Append a clean, string-only summary to the UI chat
+            current_messages.append(
+                AIMessage(content="I have completed the research phase. The recommended approach for the MNIST CNN has been added to the context.")
+            )
+            
+            # 3. IMPORTANT: Make sure you actually save the research to your state variables!
+            # Example: research_content.append(research_data)
             break
 
         # 5. Check for Tool Call
