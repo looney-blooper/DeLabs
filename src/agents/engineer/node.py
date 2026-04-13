@@ -6,6 +6,7 @@ from src.agents.engineer.prompt import engineer_prompt_template
 from src.core.mcp_gateway import mcp_gateway
 
 import os
+import re
 
 async def engineer_node(state: DeLabsState) -> dict:
     print("💻 [Swarm] ML Engineer is writing code (ReAct Mode)...")
@@ -57,37 +58,22 @@ async def engineer_node(state: DeLabsState) -> dict:
         if tool_name:
             args = output.get("tool_arguments", {})
             filename = args.get("filename", "unknown_file.py")
-            
-            # --- THE ABSOLUTE PATH FIX ---
-            # 1. Find the root of your project
-            PROJECT_ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), "../../.."))
-            WORKSPACE_DIR = os.path.join(PROJECT_ROOT, "workspace", "experiments")
-            
-            # 2. Force the folder to exist
-            os.makedirs(WORKSPACE_DIR, exist_ok=True)
-            
-            # 3. Create the absolute path
-            absolute_path = os.path.join(WORKSPACE_DIR, filename)
-            # -----------------------------
-
-            print(f"   🔧 Executing: {tool_name} to save '{absolute_path}'")
+            print(f"   🔧 Executing: {tool_name} to save '{filename}'")
             
             tool_result = "Error: Tool not found."
             for tool in engineer_tools:
                 if tool.name == tool_name:
-                    # Execute the tool
                     tool_result = await tool.ainvoke(args)
-                    
-                    # 4. SAVE THE ABSOLUTE PATH TO THE STATE
-                    code_filepaths[filename] = absolute_path
+                    # If successful, track the newly created file in the LangGraph State!
+                    code_filepaths[filename] = f"./workspace/experiments/{filename}"
                     break
             
             print(f"   📥 Result: {tool_result}")
             
             current_messages.append(AIMessage(content=json.dumps(output)))
             current_messages.append(HumanMessage(content=f"System Tool Result for '{tool_name}': {tool_result}"))
-
+            
     return {
         "messages": current_messages,
-        "code_filepaths": code_filepaths # This now contains the absolute path!
+        "code_filepaths": code_filepaths
     }
