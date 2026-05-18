@@ -1,0 +1,94 @@
+version: '3.8'
+
+services:
+  # --- 1. YOUR INFRASTRUCTURE ---
+  postgres:
+    image: postgres:16-alpine
+    container_name: delabs_postgres
+    environment:
+      POSTGRES_USER: analab_user
+      POSTGRES_PASSWORD: analab_password
+      POSTGRES_DB: analab_state
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U analab_user -d analab_state"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  rabbitmq:
+    image: rabbitmq:3-management-alpine
+    container_name: delabs_rabbitmq
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+    volumes:
+      - rabbitmq_data:/var/lib/rabbitmq
+
+  minio:
+    image: minio/minio
+    container_name: delabs_minio
+    command: server /data --console-address ":9001"
+    environment:
+      MINIO_ROOT_USER: admin
+      MINIO_ROOT_PASSWORD: password123
+    ports:
+      - "9000:9000"
+      - "9001:9001"
+    volumes:
+      - minio_data:/data
+
+  chromadb:
+    image: chromadb/chroma:latest
+    container_name: delabs_chroma
+    ports:
+      - "8001:8000" # Moved host port to 8001 to prevent clash with FastAPI!
+    volumes:
+      - chroma_data:/chroma/chroma
+
+  # --- 2. DELABS APPLICATION SERVICES ---
+  backend:
+    build: 
+      context: ../ # <-- Look up one level to the root directory
+      dockerfile: Infra/backend.Dockerfile 
+    container_name: delabs_backend
+    ports:
+      - "8000:8000"
+    volumes:
+      - ../src:/app/src # <-- Look up to find src
+      - ../workspace:/app/workspace # <-- Look up to find workspace
+    env_file:
+      - ../.env # <-- This looks inside the Infra folder
+    environment:
+      - DATABASE_URL=postgresql://analab_user:analab_password@postgres:5432/analab_state
+      - RABBITMQ_URL=amqp://guest:guest@rabbitmq:5672/
+      - MINIO_ENDPOINT=minio:9000
+      - CHROMA_URL=http://chromadb:8000 
+    depends_on:
+      postgres:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_started
+
+  frontend:
+    build:
+      context: ../frontend # <-- Look up and into frontend
+      dockerfile: ../Infra/frontend.Dockerfile
+    container_name: delabs_frontend
+    ports:
+      - "5173:5173"
+    volumes:
+      - ../frontend/src:/app/src # <-- Look up and into frontend/src
+    environment:
+      - VITE_WS_URL=ws://localhost:8000/ws/swarm
+    depends_on:
+      - backend
+
+volumes:
+  postgres_data:
+  rabbitmq_data:
+  minio_data:
+  chroma_data:
