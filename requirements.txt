@@ -2,8 +2,10 @@ langchain
 langgraph
 langchain-google-genai
 langchain-groq
+langchain-mcp-adapters
 pydantic
 pydantic-settings
+
 
 
 psycopg2-binary
@@ -17,3 +19,8 @@ jinja2
 
 pytest
 pytest-asyncio
+
+fastapi
+uvicorn
+
+mcp
