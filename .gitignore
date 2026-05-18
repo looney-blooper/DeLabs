@@ -11,3 +11,5 @@ ProjectPlans/
 __pycache__/
 *.py[cod]
 *$py.class
+
+./workspace

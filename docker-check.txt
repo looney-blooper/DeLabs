@@ -1,0 +1,9 @@
+To check if it worked:
+
+Frontend: Go to http://localhost:5173 in your browser.
+
+Backend: Go to http://localhost:8000/docs to see your FastAPI Swagger UI.
+
+MinIO: Go to http://localhost:9001 (login: admin / password123).
+
+RabbitMQ: Go to http://localhost:15672 (login: guest / guest).
