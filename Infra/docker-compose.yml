@@ -6,15 +6,15 @@ services:
     image: postgres:16-alpine
     container_name: delabs_postgres
     environment:
-      POSTGRES_USER: analab_user
-      POSTGRES_PASSWORD: analab_password
-      POSTGRES_DB: analab_state
+      POSTGRES_USER: delabs_user
+      POSTGRES_PASSWORD: delabs_password
+      POSTGRES_DB: delabs_state
     ports:
       - "5432:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U analab_user -d analab_state"]
+      test: ["CMD-SHELL", "pg_isready -U delabs_user -d delabs_state"]
       interval: 5s
       timeout: 5s
       retries: 5
@@ -63,7 +63,7 @@ services:
     env_file:
       - ../.env # <-- This looks inside the Infra folder
     environment:
-      - DATABASE_URL=postgresql://analab_user:analab_password@postgres:5432/analab_state
+      - DATABASE_URL=postgresql://delabs_user:delabs_password@postgres:5432/delabs_state
       - RABBITMQ_URL=amqp://guest:guest@rabbitmq:5672/
       - MINIO_ENDPOINT=minio:9000
       - CHROMA_URL=http://chromadb:8000 

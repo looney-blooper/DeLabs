@@ -1,0 +1,49 @@
+name : DataBase CI Pipeline
+
+On:
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
+
+database-tests:
+  runs-on: ubuntu-latest;
+
+  services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_USER: delabs_user
+          POSTGRES_PASSWORD: delabs_password
+          POSTGRES_DB: delabs_state
+        ports:
+          - 5432:5432
+        # Wait until Postgres is fully booted before starting the python tests
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+  env:
+      DATABASE_URL: postgresql://delabs_user:delabs_password@localhost:5432/delabs_state
+
+
+  steps:
+    - name: checkout - code
+      uses: actions/checkout@v4
+
+    - name: Setup Python 3.11
+      uses: actions/setup-python@v5
+      with:
+        python-version: "3.11"
+        cache: "pip"
+
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install -r requirements.txt
+
+    - name: Run Database Tests
+      run: |
+        pytest tests/test_db.py -v
