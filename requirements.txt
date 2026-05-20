@@ -24,3 +24,7 @@ fastapi
 uvicorn
 
 mcp
+
+torch
+numpy
+pandas

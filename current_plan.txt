@@ -1,0 +1,50 @@
+
+1. DATABASE & STORAGE FOUNDATION: SQLAlchemy & MinIO
+   Objective: Establish a robust data layer for persistence.
+   - Postgres Models (SQLAlchemy): Create tables for Users, Projects, Runs (versions), and Telemetry. 
+     The 'Runs' table stores hyperparameters (JSON), training status, and foreign keys for storage URLs.
+   - MinIO Integration: Implement 'artifact_manager.py' using boto3/minio SDK to manage 
+     isolated buckets per user for source code (.py) and model weights (.pth).
+
+2. ENGINEER AGENT STRICT PROMPTING: System Prompts & Callbacks
+   Objective: Ensure the ML Engineer produces telemetry-compatible code.
+   - System Prompting: Update the ML Engineer's prompt to force inclusion of a custom 
+     PyTorch/Keras Callback class.
+   - Telemetry Requirements:
+     * Suppress standard progress bars (tqdm).
+     * Strictly print JSON strings at the end of every epoch: 
+       {"delabs_telemetry": true, "epoch": 1, "loss": 0.45, "val_loss": 0.50}
+     * Ensure training code concludes by saving weights to 'model_artifact.pth'.
+
+3. THE COLAB REVERSE-SSH BRIDGE: Paramiko Execution Tool
+   Objective: Create the bridge for cloud GPU execution.
+   - Colab Setup: Provide a 5-line script for users to run in Colab to install 
+     'colab-ssh', open an Ngrok tunnel, and expose port 22.
+   - Execution Tool: Develop 'execute_on_colab' (MCP Tool) using Paramiko. 
+     * Uses SCP to push 'mnist_cnn.py' to Colab.
+     * Executes via 'python3'.
+     * Attaches an asynchronous reader to the stdout stream.
+
+4. THE TRAINER AGENT NODE: LangGraph Integration
+   Objective: Orchestrate the training workflow.
+   - Trainer Node: Integrate a 'trainer_node' into the existing LangGraph orchestration.
+   - Workflow: Triggered only after Human-in-the-Loop "Approve" action.
+   - Retrieval: Node pulls the active Ngrok URL from session state and invokes 
+     the 'execute_on_colab' tool.
+
+5. LIVE TELEMETRY STREAMING: FastAPI WebSockets
+   Objective: Provide real-time UI updates with low latency.
+   - Stream Processing: The 'execute_on_colab' tool monitors SSH stdout for 
+     lines containing '"delabs_telemetry": true'.
+   - WebSocket Delivery: Parse JSON lines and push to '/ws/telemetry/{run_id}' 
+     via FastAPI WebSockets.
+   - Performance: Bypasses standard LangGraph state updates to minimize latency.
+
+6. POST-TRAINING ARTIFACT CONSOLIDATION: Database & Storage Commits
+   Objective: Finalize the run and persist all assets.
+   - Artifact Cleanup: Trainer Agent triggers final SCP command to download 
+     'model_artifact.pth' from Colab to the backend.
+   - Persistence: 'artifact_manager' uploads assets to MinIO.
+   - Finalization: Backend creates a new Run entry in Postgres with telemetry 
+     history, hyperparameters, and MinIO URLs.
+   - Notification: Send '{"type": "training_complete", "run_id": 123}' to the frontend.

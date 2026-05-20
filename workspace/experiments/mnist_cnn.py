@@ -1,1 +1,58 @@
-import torch\nimport torch.nn as nn\nimport torchvision\nimport torchvision.transforms as transforms\nimport torch.optim as optim\nfrom torch.utils.data import DataLoader\nimport numpy as np\n\n# Device configuration\ndevice = torch.device('cuda' if torch.cuda.is_available() else 'cpu')\n\n# Hyperparameters\nnum_epochs = 5\nbatch_size = 64\nlearning_rate = 0.001\n\n# MNIST dataset\ntransform = transforms.Compose([transforms.ToTensor()])\ntrain_dataset = torchvision.datasets.MNIST(root='./data', train=True, download=True, transform=transform)\ntest_dataset = torchvision.datasets.MNIST(root='./data', train=False, download=True, transform=transform)\n\n# Data loader\ntrain_loader = DataLoader(dataset=train_dataset, batch_size=batch_size, shuffle=True)\ntest_loader = DataLoader(dataset=test_dataset, batch_size=batch_size, shuffle=False)\n\n# CNN model\nclass CNN(nn.Module):\n    def __init__(self):\n        super(CNN, self).__init__()\n        self.conv1 = nn.Conv2d(1, 10, kernel_size=5)\n        self.conv2 = nn.Conv2d(10, 20, kernel_size=5)\n        self.fc1 = nn.Linear(320, 50)\n        self.fc2 = nn.Linear(50, 10)\n\n    def forward(self, x):\n        x = nn.functional.relu(nn.functional.max_pool2d(self.conv1(x), 2))\n        x = nn.functional.relu(nn.functional.max_pool2d(self.conv2(x), 2))\n        x = x.view(-1, 320)\n        x = nn.functional.relu(self.fc1(x))\n        x = self.fc2(x)\n        return x\n\nmodel = CNN().to(device)\n\n# Loss and optimizer\ncriterion = nn.CrossEntropyLoss()\noptimizer = optim.Adam(model.parameters(), lr=learning_rate)\n\n# Train the model\nfor epoch in range(num_epochs):\n    for i, (images, labels) in enumerate(train_loader):\n        images, labels = images.to(device), labels.to(device)\n        optimizer.zero_grad()\n        outputs = model(images)\n        loss = criterion(outputs, labels)\n        loss.backward()\n        optimizer.step()\n\n    print('Epoch [{}/{}], Loss: {:.4f}'.format(epoch+1, num_epochs, loss.item()))\n\n# Evaluate the model\nmodel.eval()\nwith torch.no_grad():\n    correct = 0\n    total = 0\n    for images, labels in test_loader:\n        images, labels = images.to(device), labels.to(device)\n        outputs = model(images)\n        _, predicted = torch.max(outputs.data, 1)\n        total += labels.size(0)\n        correct += (predicted == labels).sum().item()\n\n    print('Test Accuracy: {} %'.format(100 * correct / total))
+import torch
+import torch.nn as nn
+import torchvision
+import torchvision.transforms as transforms
+
+# Device configuration
+device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+
+# Hyperparameters
+input_shape = (1, 1, 224, 224)
+num_classes = 10
+
+# MNIST dataset
+transform = transforms.Compose([transforms.Resize(input_shape[2:]), transforms.ToTensor()])
+train_dataset = torchvision.datasets.MNIST(root='./data', train=True, download=True, transform=transform)
+train_loader = torch.utils.data.DataLoader(dataset=train_dataset, batch_size=64, shuffle=True)
+
+# CNN model
+class CNN(nn.Module):
+    def __init__(self):
+        super(CNN, self).__init__()
+        self.conv1 = nn.Conv2d(1, 16, 3)
+        self.maxpool1 = nn.MaxPool2d(2, 2)
+        self.flatten = nn.Flatten()
+        self.fc1 = nn.Linear(16*111*111, 10)
+
+    def forward(self, x):
+        x = self.conv1(x)
+        x = self.maxpool1(x)
+        x = self.flatten(x)
+        x = self.fc1(x)
+        return x
+
+# Initialize the model, loss function and optimizer
+model = CNN().to(device)
+criterion = nn.CrossEntropyLoss()
+optimizer = torch.optim.Adam(model.parameters(), lr=0.001)
+
+# Train the model
+for epoch in range(10):
+    for batch_idx, (data, target) in enumerate(train_loader):
+        # Get the inputs and labels
+        inputs, labels = data.to(device), target.to(device)
+
+        # Forward pass
+        outputs = model(inputs)
+        loss = criterion(outputs, labels)
+
+        # Backward and optimize
+        optimizer.zero_grad()
+        loss.backward()
+        optimizer.step()
+
+        if (batch_idx+1) % 100 == 0:
+            print ('Epoch [{}/{}], Step [{}/{}], Loss: {:.4f}' .format(epoch+1, 10, batch_idx+1, len(train_loader), loss.item()))
+
+# Save the model
+torch.save(model.state_dict(), 'mnist_cnn.pth')
