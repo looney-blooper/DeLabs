@@ -1,6 +1,6 @@
 name : DataBase CI Pipeline
 
-On:
+on:
   push:
     branches: [ "main" ]
   pull_request:
