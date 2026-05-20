@@ -17,6 +17,11 @@ class Settings(BaseSettings):
     database_url : PostgresDsn
     rabbitmq_url : AmqpDsn
 
+    #Minio Configurations
+    MINIO_ENDPOINT : str
+    MINIO_ROOT_USER : str
+    MINIO_ROOT_PASSWORD : str
+
     #app config
     environment : str = "development"
     debug : bool = True

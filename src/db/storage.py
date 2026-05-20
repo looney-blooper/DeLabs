@@ -6,8 +6,8 @@ from src.core.config import settings
 class MinioStorageVault:
     def __init__(self):
         self.end_point = settings.MINIO_ENDPOINT
-        self.access_key = settings.MINIO_ACCESS_KEY
-        self.secret_key = settings.MINIO_SECRET_KEY
+        self.access_key = settings.MINIO_ROOT_USER
+        self.secret_key = settings.MINIO_ROOT_PASSWORD
 
         self.client = Minio(
             self.end_point,
