@@ -46,5 +46,9 @@ jobs:
 
       # --- NEW: A sanity check to ensure the Swarm actually compiles ---
       - name: Test Swarm Compilation
+        env:
+          DATABASE_URL: "postgresql://user:pass@localhost:5432/db"
+          RABBITMQ_URL: "amqp://guest:guest@localhost:5672/"
+          groq_api_key: ${{ secrets.GROQ_API_KEY }}
         run: |
-          python -c "from src.orchestrator.builder import delabs_swarm; print('✅ Swarm compiled successfully!')"
+          python -c "from src.orchestrator.builder import delabs_swarm; print(' Swarm compiled successfully!')"
