@@ -4,8 +4,8 @@ from functools import lru_cache
 
 class Settings(BaseSettings):
     #llm api
-    gemini_api_key : SecretStr
-    groq_api_key : SecretStr | None = None
+    gemini_api_key : SecretStr | None = None
+    groq_api_key : SecretStr 
 
     #tracking
     langchain_tracking_v2 : str = "true"
