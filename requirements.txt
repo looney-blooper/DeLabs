@@ -28,3 +28,6 @@ mcp
 torch
 numpy
 pandas
+
+minio
+sqlalchemy
