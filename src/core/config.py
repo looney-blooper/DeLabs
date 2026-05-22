@@ -18,9 +18,9 @@ class Settings(BaseSettings):
     rabbitmq_url : AmqpDsn
 
     #Minio Configurations
-    MINIO_ENDPOINT : str
-    MINIO_ROOT_USER : str
-    MINIO_ROOT_PASSWORD : str
+    MINIO_ENDPOINT : str | None = None
+    MINIO_ROOT_USER : str | None = None
+    MINIO_ROOT_PASSWORD : str | None = None
 
     #app config
     environment : str = "development"
