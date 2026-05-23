@@ -25,9 +25,11 @@ uvicorn
 
 mcp
 
-torch
-numpy
-pandas
+#torch
+#numpy
+#pandas
 
 minio
 sqlalchemy
+
+paramiko
