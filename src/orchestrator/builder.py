@@ -4,6 +4,7 @@ from src.agents.architect.node import architect_node
 from src.agents.engineer.node import engineer_node
 from src.agents.reviewer.node import reviewer_node
 from src.agents.scientist.node import scientist_node
+from src.agents.trainer.node import trainer_node
 
 from src.core.state import DeLabsState
 
@@ -36,6 +37,7 @@ def build_delabs_graph():
     builder.add_node("Engineer", engineer_node)
     builder.add_node("Architect", architect_node)
     builder.add_node("Reviewer", reviewer_node)
+    builder.add_node("Trainer", trainer_node)
 
     builder.set_entry_point("Scientist")
     builder.add_edge("Scientist", "Architect")
@@ -47,9 +49,11 @@ def build_delabs_graph():
         route_after_QA,
         {
             "Engineer" : "Engineer",
-            END : END,
+            "Trainer" : "Trainer",
         }
     )
+
+    builder.add_edge("Trainer", END)
 
     graph = builder.compile()
 
