@@ -5,7 +5,7 @@ from src.db.models import Base
 from src.core.config import settings
 
 # Grabs connection configurations matching your internal container network names
-DATABASE_URL = settings.DATABASE_URL
+DATABASE_URL = settings.database_url
 
 engine = create_engine(DATABASE_URL)
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
