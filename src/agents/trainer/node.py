@@ -1,9 +1,10 @@
 import os
 import asyncio
 from langchain_core.messages import AIMessage
+from langchain_core.runnables.config import RunnableConfig
 from src.agents.trainer.tools import deploy_and_train
 
-async def trainer_node(state: dict):
+async def trainer_node(state: dict, config: RunnableConfig):
     """
     The LangGraph node responsible for orchestrating remote execution.
     Takes the approved code, securely tunnels to Colab, and streams telemetry.
@@ -12,6 +13,12 @@ async def trainer_node(state: dict):
     
     messages = state.get("messages", [])
     filepaths = state.get("code_filepaths", {})
+
+    # Extract the live telemetry queue from LangGraph config
+    telemetry_queue = config.get("configurable", {}).get("telemetry_queue")
+    
+    # Capture the main asyncio event loop BEFORE we go into the background thread
+    main_loop = asyncio.get_running_loop()
     
     # 1. Locate the generated file from the ML Engineer's state
     if not filepaths:
@@ -34,14 +41,21 @@ async def trainer_node(state: dict):
         messages.append(AIMessage(content=msg))
         return {"messages": messages}
 
-    # 3. Define the Telemetry Callback
+    # 3. Handling Telemetery data 
+    # 🚨 The Live UI Bridge 🚨
     def handle_telemetry(data: dict):
-        # TODO: In the next phase, we will write this data to the Postgres Telemetry table
-        # so the dedicated UI WebSocket can stream it. For now, we verify it in the terminal.
-        epoch = data.get("epoch", "?")
-        loss = data.get("loss", "?")
-        val_acc = data.get("val_accuracy", "?")
-        print(f"📈 [Live Telemetry] Epoch: {epoch} | Loss: {loss} | Val Acc: {val_acc}")
+        # 1. Print to terminal for debugging
+        print(f"📈 [Live Telemetry] Epoch: {data.get('epoch')} | Loss: {data.get('loss')}")
+        
+        # 2. Push to the UI WebSocket queue safely from this background thread
+        if telemetry_queue:
+            payload = {
+                "type": "telemetry",
+                "data": data
+            }
+            main_loop.call_soon_threadsafe(telemetry_queue.put_nowait, payload)
+
+    print(f"🔧 [Trainer Node] Handing off {local_filepath} to Colab execution tool...")
 
     # 4. Execute the SSH Deployment in a background thread to prevent blocking
     print(f"🔧 [Trainer Node] Handing off {local_filepath} to Colab execution tool...")

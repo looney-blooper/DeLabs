@@ -54,7 +54,7 @@ app.add_middleware(
 )
 
 @app.websocket("/ws/swarm")
-async def swarm_endpoint(websocket : WebSocket):
+async def swarm_endpoint(websocket: WebSocket):
     await websocket.accept()
     print("🟢 Client connected to Swarm.")
 
@@ -63,37 +63,59 @@ async def swarm_endpoint(websocket : WebSocket):
         payload = json.loads(data)
         user_prompt = payload.get("prompt", "")
 
-        await websocket.send_json({"type" : "status", "message" : "🚀 Initializing Swarm..."})
+        await websocket.send_json({"type": "status", "message": "🚀 Initializing Swarm..."})
 
         initial_state = {
-            "messages" : [HumanMessage(content = user_prompt)],
-            "research_content" : [],
-            "paper_reference" : [],
-            "archeitecture_draft" : "",
-            "hyperparameters" : {},
-            "code_filepaths" : {},
-            "hardware_telemetry" : {},
-            "training_metrics" : {},
-            "error_logs" : [],
-            "human_feedback" : None,
-            "requires_approval" : False,
+            "messages": [HumanMessage(content=user_prompt)],
+            "research_content": [],
+            "paper_reference": [],
+            "architecture_draft": "",
+            "hyperparameters": {},
+            "code_filepaths": {},
+            "hardware_telemetry": {},
+            "training_metrics": {},
+            "error_logs": [],
+            "human_feedback": None,
+            "requires_approval": False,
         }
 
+        # 1. Create the Telemetry Queue
+        telemetry_queue = asyncio.Queue()
+
+        # 2. Define the background task that listens to the queue
+        async def telemetry_sender():
+            while True:
+                message = await telemetry_queue.get()
+                if message is None:  # A None payload tells the loop to shut down
+                    break
+                await websocket.send_json(message)
+
+        # 3. Start the listener in the background concurrently
+        sender_task = asyncio.create_task(telemetry_sender())
+
+        # 4. Pass the queue into LangGraph
+        config = {"configurable": {"telemetry_queue": telemetry_queue}}
         final_state = None
 
-        async for event in delabs_swarm.astream(initial_state):
+        # Notice we pass `config` here now
+        async for event in delabs_swarm.astream(initial_state, config=config):
             for node_name, node_state in event.items():
                 await websocket.send_json({
-                    "type" : "update",
-                    "node" : node_name,
-                    "message" : f"[{node_name}] finished processing."
+                    "type": "update",
+                    "node": node_name,
+                    "message": f"[{node_name}] finished processing."
                 })
                 final_state = node_state
 
+        # 5. Shut down the background telemetry listener gracefully
+        await telemetry_queue.put(None)
+        await sender_task
+
+        # Send final completion
         if final_state:
             await websocket.send_json({
-                "type" : "complete",
-                "message" : "✅ Swarm Execution Complete.",
+                "type": "complete",
+                "message": "✅ Swarm Execution Complete.",
                 "architecture": final_state.get("architecture_draft", ""),
                 "files": final_state.get("code_filepaths", {}),
                 "errors": final_state.get("error_logs", [])
@@ -104,6 +126,7 @@ async def swarm_endpoint(websocket : WebSocket):
     
     except Exception as e:
         await websocket.send_json({"type":"error", "message":str(e)})
+
 
 if __name__ == "__main__":
     uvicorn.run(
