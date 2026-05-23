@@ -12,12 +12,36 @@ import os
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '../..')))
 from src.orchestrator.builder import delabs_swarm
 from src.core.mcp_gateway import mcp_gateway
+from src.db.database import init_db
 
 @asynccontextmanager
 async def lifespan(app : FastAPI):
-    await mcp_gateway.initialize()
-    yield 
+
+    print("🚀 [Backend] Booting up...")
+
+    #Initialize Postgres database schema
+    print("📦 [Database] Verifying database schemas...")
+    try:
+        init_db()
+        print("✅ [Database] Database schemas are ready.")
+    except Exception as e:
+        print(f"❌ [Database] Failed to initialize database: {e}")
+    
+    #initialize MCP Gateway
+    print("🌐 [MCP] Initializing Gateway...")
+    try:
+        await mcp_gateway.initialize()
+        print("✅ [MCP] Gateway initialized successfully.")
+    except Exception as e:
+        print(f"❌ [MCP] Failed to initialize Gateway: {e}")
+        raise e
+
+    yield #app is now running
+
+    #teardown logics
     await mcp_gateway.cleanup()
+    print("🛑 [Backend] Shutting down...")
+
 
 app = FastAPI(title="DeLabs API", lifespan = lifespan)
 
