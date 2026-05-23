@@ -15,7 +15,7 @@ RUN apt-get update && apt-get install -y \
     && rm -rf /var/lib/apt/lists/*
 
 # Copy only the requirements first to cache the pip install step
-COPY ../requirements.txt .
+COPY requirements.txt .
 RUN pip install --upgrade pip && pip install --no-cache-dir -r requirements.txt
 
 # Copy the rest of your application code
@@ -25,4 +25,4 @@ COPY . .
 EXPOSE 8000
 
 # Command to run the FastAPI server with hot-reloading
-CMD ["uvicorn", "src.api.server:app", "--host", "0.0.0.0", "--port", "8000", "--reload"]
+CMD ["uvicorn", "src.api.server:app", "--host", "0.0.0.0", "--port", "8000", "--reload", "--reload-dir", "src", "--reload-exclude", "workspace", "--reload-exclude", "workspace/*"]
