@@ -14,8 +14,8 @@ class Settings(BaseSettings):
     wandb_api_key : SecretStr | None = None
 
     #infra
-    database_url : PostgresDsn
-    rabbitmq_url : AmqpDsn
+    database_url : str
+    rabbitmq_url : str
 
     #Minio Configurations
     MINIO_ENDPOINT : str | None = None
