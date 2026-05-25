@@ -28,6 +28,8 @@ jobs:
 
     env:
         DATABASE_URL: postgresql://delabs_user:delabs_password@localhost:5432/delabs_state
+        GROQ_API_KEY: ${{ secrets.GROQ_API_KEY }}
+        rabbitmq_url: ${{ secrets.rabbitmq_url }}
 
 
     steps:
