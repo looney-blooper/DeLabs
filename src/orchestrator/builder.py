@@ -1,4 +1,5 @@
 from langgraph.graph import StateGraph, END
+from langgraph.checkpoint.memory import MemorySaver
 
 from src.agents.architect.node import architect_node
 from src.agents.engineer.node import engineer_node
@@ -19,7 +20,7 @@ def route_after_QA(state : DeLabsState) -> str:
     # If the QA agent flipped the approval flag to True, we are done!
     if state.get("requires_approval", False):
         print("✅ [Orchestrator] Code passed QA. Routing to END (Ready for Execution).")
-        return END
+        return "Trainer"
     else:
         # If it failed, we send the state back to the Engineer to fix the errors
         print("❌ [Orchestrator] Code failed QA. Routing back to ML Engineer.")
@@ -55,7 +56,12 @@ def build_delabs_graph():
 
     builder.add_edge("Trainer", END)
 
-    graph = builder.compile()
+    memory = MemorySaver()
+
+    graph = builder.compile(
+        checkpointer = memory,
+        interrupt_before = ["Trainer"], 
+    )   
 
     return graph
 
