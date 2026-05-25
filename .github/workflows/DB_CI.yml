@@ -8,7 +8,7 @@ on:
 
 jobs:
   database-tests:
-    runs-on: ubuntu-latest;
+    runs-on: ubuntu-latest
 
     services:
         postgres:
